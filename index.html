@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>网址转书签</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    min-height: 100vh;
+    padding: 16px;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.container { max-width: 520px; margin: 0 auto; }
+.header {
+    text-align: center;
+    padding: 24px 0 20px;
+}
+.header .icon { font-size: 40px; margin-bottom: 8px; }
+.header h1 { font-size: 24px; font-weight: 700; color: #1d1d1f; }
+.header p { font-size: 13px; color: #86868b; margin-top: 4px; }
+
+.card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #1d1d1f;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 140px;
+    border: 2px solid #e5e5ea;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+    -webkit-user-select: text;
+    user-select: text;
+}
+textarea:focus { border-color: #007aff; }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: #007aff; color: #fff; width: 100%; }
+.btn-primary:hover { background: #0066d6; }
+.btn-outline { background: #fff; color: #007aff; border: 2px solid #007aff; }
+.btn-outline:hover { background: #f0f5ff; }
+.btn-group { display: flex; gap: 10px; }
+.btn-group .btn { flex: 1; }
+
+.input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.input-row input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 2px solid #e5e5ea;
+    border-radius: 12px;
+    font-size: 15px;
+    outline: none;
+    -webkit-user-select: text;
+    user-select: text;
+}
+.input-row input:focus { border-color: #007aff; }
+
+.url-list { list-style: none; }
+.url-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f5;
+    -webkit-user-select: text;
+    user-select: text;
+}
+.url-item:last-child { border-bottom: none; }
+.url-item .num {
+    width: 24px; height: 24px;
+    background: #f0f0f5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #86868b;
+    flex-shrink: 0;
+}
+.url-item .info { flex: 1; min-width: 0; }
+.url-item .domain {
+    font-size: 12px;
+    color: #86868b;
+    margin-bottom: 2px;
+}
+.url-item .title-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px dashed #e5e5ea;
+    padding: 4px 0;
+    font-size: 14px;
+    outline: none;
+    color: #1d1d1f;
+    background: transparent;
+    -webkit-user-select: text;
+    user-select: text;
+}
+.url-item .title-input:focus { border-bottom-color: #007aff; }
+.url-item .del-btn {
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    color: #ff3b30;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.url-item .del-btn:active { background: #fff0f0; }
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #86868b;
+}
+.empty-state .emoji { font-size: 40px; margin-bottom: 10px; }
+.empty-state p { font-size: 14px; }
+
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px 12px;
+    font-size: 13px;
+    color: #86868b;
+}
+
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1d1d1f;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+.helper {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f9f9fb;
+    border-radius: 10px;
+}
+.helper summary {
+    font-size: 13px;
+    color: #007aff;
+    cursor: pointer;
+    font-weight: 500;
+    list-style: none;
+}
+.helper summary::-webkit-details-marker { display: none; }
+.helper .steps {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #86868b;
+    line-height: 1.8;
+    padding-left: 4px;
+}
+.helper .steps span { color: #1d1d1f; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="container">
+    <div class="header">
+        <div class="icon">🔖</div>
+        <h1>网址转书签</h1>
+        <p>粘贴网址 → 生成浏览器可导入的书签文件</p>
+    </div>
+
+    <!-- 输入区 -->
+    <div class="card">
+        <div class="card-title">📋 粘贴网址</div>
+        <textarea id="urlInput" placeholder="每行一个网址，例如：&#10;https://github.com&#10;https://www.bilibili.com&#10;www.zhihu.com&#10;&#10;以 # 开头的行为注释，会被跳过"></textarea>
+        <div class="input-row" style="margin-top:12px;">
+            <input type="text" id="folderName" placeholder="书签文件夹名" value="我的书签">
+            <button class="btn btn-primary" onclick="parseUrls()" style="width:auto; white-space:nowrap;">解析网址</button>
+        </div>
+    </div>
+
+    <!-- 预览区 -->
+    <div class="card" id="previewCard" style="display:none;">
+        <div class="card-title">🔍 预览编辑</div>
+        <div class="status-bar">
+            <span id="urlCount">0 个网址</span>
+            <button class="btn btn-outline" onclick="editAllTitles()" style="padding:6px 14px; font-size:13px;">批量编辑</button>
+        </div>
+        <ul class="url-list" id="urlList"></ul>
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <div class="emoji">📭</div>
+            <p>暂无网址，请先粘贴并解析</p>
+        </div>
+        <div class="btn-group" style="margin-top:16px;">
+            <button class="btn btn-outline" onclick="clearAll()">清空重来</button>
+            <button class="btn btn-primary" onclick="generateBookmarks()">📥 生成书签文件</button>
+        </div>
+    </div>
+
+    <!-- 导入说明 -->
+    <details class="helper">
+        <summary>📲 如何在手机上导入书签？</summary>
+        <div class="steps">
+            <span>方法一：</span>下载 HTML 后传到电脑，在 Chrome/Edge/Firefox 中导入<br>
+            <span>方法二：</span>通过微信「文件传输助手」传到电脑再导入<br>
+            <span>方法三：</span>用 AirDrop（苹果）或 Nearby Share（安卓）传到电脑<br><br>
+            <span>电脑端导入步骤：</span><br>
+            &nbsp;&nbsp;Chrome/Edge → 书签管理器 → 导入 → 选择 HTML 文件<br>
+            &nbsp;&nbsp;Firefox → 管理书签 → 导入和备份 → 从 HTML 导入
+        </div>
+    </details>
+</div>
+
+<script>
+let urls = [];
+let titles = {};
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function parseUrls() {
+    const raw = document.getElementById('urlInput').value;
+    const folder = document.getElementById('folderName').value.trim() || '我的书签';
+    urls = [];
+    titles = {};
+
+    raw.split('\n').forEach(line => {
+        line = line.trim();
+        if (!line || line.startsWith('#')) return;
+        line = line.replace(/^["']|["']$/g, '');
+        if (!line.startsWith('http://') && !line.startsWith('https://')) {
+            line = 'https://' + line;
+        }
+        try {
+            const parsed = new URL(line);
+            if (parsed.hostname.includes('.')) {
+                urls.push(line);
+                titles[line] = parsed.hostname.replace('www.', '');
+            }
+        } catch (e) { /* skip invalid */ }
+    });
+
+    renderList();
+    if (urls.length === 0) {
+        showToast('未找到有效网址，请检查格式');
+    }
+}
+
+function renderList() {
+    const card = document.getElementById('previewCard');
+    const list = document.getElementById('urlList');
+    const empty = document.getElementById('emptyState');
+    const count = document.getElementById('urlCount');
+
+    card.style.display = 'block';
+    count.textContent = urls.length + ' 个网址';
+
+    if (urls.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    list.innerHTML = urls.map((url, i) => {
+        try {
+            var host = new URL(url).hostname.replace('www.', '');
+        } catch(e) { var host = url; }
+        return `
+            <li class="url-item">
+                <div class="num">${i + 1}</div>
+                <div class="info">
+                    <div class="domain">${escapeHtml(host)}</div>
+                    <input class="title-input" value="${escapeHtml(titles[url] || host)}"
+                           onchange="updateTitle(${i}, this.value)" oninput="updateTitle(${i}, this.value)">
+                </div>
+                <button class="del-btn" onclick="removeUrl(${i})" title="删除">×</button>
+            </li>`;
+    }).join('');
+}
+
+function updateTitle(index, value) {
+    titles[urls[index]] = value;
+}
+
+function removeUrl(index) {
+    const removed = urls.splice(index, 1)[0];
+    urls = urls.filter(u => u); // clean up
+    // rebuild titles
+    const newTitles = {};
+    urls.forEach(u => { newTitles[u] = titles[u] || u; });
+    titles = newTitles;
+    renderList();
+}
+
+function clearAll() {
+    urls = [];
+    titles = {};
+    document.getElementById('urlInput').value = '';
+    document.getElementById('folderName').value = '我的书签';
+    document.getElementById('previewCard').style.display = 'none';
+}
+
+async function editAllTitles() {
+    // 尝试批量抓取标题（仅支持同源或开放 CORS 的网站）
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '抓取中...';
+    btn.disabled = true;
+
+    let fetched = 0;
+    const promises = urls.map(async (url, i) => {
+        try {
+            const resp = await fetch(url, { mode: 'no-cors', signal: AbortSignal.timeout(5000) });
+            // no-cors 模式下无法读取响应，所以改用另一种策略：
+            // 对同源有效，跨域大概率失败——这在纯前端是物理限制
+        } catch(e) {}
+        return null;
+    });
+
+    // 实际上纯前端跨域抓标题基本不可行，这里给用户个提示
+    btn.textContent = orig;
+    btn.disabled = false;
+    showToast('提示：标题需手动编辑，或用电脑版工具自动抓取');
+}
+
+function generateBookmarks() {
+    if (urls.length === 0) {
+        showToast('没有网址，请先粘贴解析');
+        return;
+    }
+
+    const folderName = document.getElementById('folderName').value.trim() || '我的书签';
+    const ts = Math.floor(Date.now() / 1000);
+
+    let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>${escapeHtml(folderName)}</TITLE>
+<H1>${escapeHtml(folderName)}</H1>
+<DL><p>
+    <DT><H3 ADD_DATE="${ts}">${escapeHtml(folderName)}</H3>
+    <DL><p>
+`;
+
+    urls.forEach(url => {
+        const title = titles[url] || url;
+        html += `        <DT><A HREF="${escapeHtml(url)}" ADD_DATE="${ts}">${escapeHtml(title)}</A>\n`;
+    });
+
+    html += `    </DL><p>
+</DL><p>`;
+
+    // 下载
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const filename = folderName + '.html';
+
+    // 尝试直接下载
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+
+    // 同时复制到剪贴板作为备份
+    navigator.clipboard.writeText(html).then(() => {
+        showToast('✅ 书签文件已生成！如未自动下载，内容已复制到剪贴板');
+    }).catch(() => {
+        showToast('✅ 书签文件已下载：' + filename);
+    });
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// 输入框自动解析（失焦时）
+document.getElementById('urlInput').addEventListener('blur', function() {
+    if (this.value.trim() && urls.length === 0) {
+        parseUrls();
+    }
+});
+</script>
+</body>
+</html>
