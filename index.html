@@ -502,12 +502,79 @@ textarea::placeholder {
 }
 
 /* ============================================================
+   赞助区域 —— 收款码展示
+   ============================================================ */
+.sponsor-card {
+    text-align: center;
+}
+.sponsor-card .sponsor-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.sponsor-card .sponsor-subtitle {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 18px;
+    line-height: 1.6;
+}
+/* 二维码容器：横向排列，自适应 */
+.qr-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+/* 单个二维码卡片 */
+.qr-item {
+    flex: 1;
+    min-width: 130px;
+    max-width: 200px;
+    text-align: center;
+}
+/* 二维码图片 */
+.qr-item img {
+    width: 100%;
+    max-width: 180px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    display: block;
+    margin: 0 auto;
+}
+/* 二维码下方标签 */
+.qr-item .qr-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #f5f5fa;
+}
+/* 支付宝绿 */
+.qr-item.alipay .qr-label { color: #1677ff; background: #e6f4ff; }
+/* 微信绿 */
+.qr-item.wechat .qr-label { color: #07c160; background: #e6f9f0; }
+
+/* ============================================================
    响应式适配
    ============================================================ */
 @media (max-width: 380px) {
     .container { padding: 0; }
     .card { padding: 16px; border-radius: var(--radius-md); }
     .btn { padding: 12px 16px; font-size: 14px; }
+    .qr-row { gap: 10px; }
+    .qr-item { min-width: 100px; }
+    .qr-item img { max-width: 140px; }
+    .qr-item .qr-label { font-size: 12px; }
 }
 </style>
 </head>
@@ -602,6 +669,24 @@ www.zhihu.com
             &nbsp;&nbsp;Safari → 文件 → 导入自 → 书签 HTML 文件
         </div>
     </details>
+
+    <!-- ===== 赞助区域 ===== -->
+    <div class="card sponsor-card">
+        <div class="sponsor-title">☕ 支持一下</div>
+        <div class="sponsor-subtitle">如果这个小工具对你有帮助，欢迎请开发者喝杯咖啡~</div>
+        <div class="qr-row">
+            <!-- 支付宝收款码 -->
+            <div class="qr-item alipay">
+                <img src="alipay.jpg" alt="支付宝收款码" loading="lazy">
+                <div class="qr-label">💙 支付宝</div>
+            </div>
+            <!-- 微信收款码 -->
+            <div class="qr-item wechat">
+                <img src="wechat.jpg" alt="微信收款码" loading="lazy">
+                <div class="qr-label">💚 微信支付</div>
+            </div>
+        </div>
+    </div>
 
     <!-- 页脚 -->
     <div class="footer">
